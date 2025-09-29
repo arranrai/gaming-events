@@ -95,6 +95,7 @@ footer{margin-top:18px;color:var(--muted);font-size:13px;}
 </div>
 
 <script>
+window.events = []; // Global for debugging
 (async function(){
 const eventsLayer=document.getElementById('eventsLayer');
 const eventsList=document.getElementById('eventsList');
@@ -106,32 +107,32 @@ const focusLabel=document.getElementById('focusLabel');
 const timelineInner=document.getElementById('timelineInner');
 const viewport=document.getElementById('viewport');
 
-let events=[];
 const STORAGE_KEY='pokemon_sleep_events_v1';
 
-// Try fetching events.json from repo
+// Load events from events.json first
 try{
   const res=await fetch('events.json');
   if(res.ok){
-    events=await res.json();
-    localStorage.setItem(STORAGE_KEY,JSON.stringify(events));
+    const arr=await res.json();
+    window.events = arr.map(e=>({id:e.id,title:e.title,start:e.start,end:e.end?e.end:e.start,description:e.description||'',color:e.color||'#3b82f6'}));
+    localStorage.setItem(STORAGE_KEY,JSON.stringify(window.events));
   }else{
     throw new Error('No events.json');
   }
 }catch(e){
+  // fallback to localStorage
   const saved=localStorage.getItem(STORAGE_KEY);
-  if(saved) events=JSON.parse(saved);
-  else events=[];
-}
+  if(saved) window.events = JSON.parse(saved);
+})();
 
-function saveEvents(){localStorage.setItem(STORAGE_KEY,JSON.stringify(events));}
+function saveEvents(){localStorage.setItem(STORAGE_KEY,JSON.stringify(window.events));}
 function parseDate(d){return d instanceof Date?d:new Date(d+'T00:00:00');}
 function fmtDate(d){return parseDate(d).toLocaleDateString();}
 let minDate,maxDate;
 function computeRange(){
-  if(events.length===0){const t=new Date();minDate=new Date(t);maxDate=new Date(t);return;}
-  const starts=events.map(e=>parseDate(e.start).getTime());
-  const ends=events.map(e=>parseDate(e.end||e.start).getTime());
+  if(window.events.length===0){const t=new Date();minDate=new Date(t);maxDate=new Date(t);return;}
+  const starts=window.events.map(e=>parseDate(e.start).getTime());
+  const ends=window.events.map(e=>parseDate(e.end||e.start).getTime());
   const min=new Date(Math.min(...starts));min.setDate(min.getDate()-4);
   const max=new Date(Math.max(...ends));max.setDate(max.getDate()+4);
   minDate=min;maxDate=max;
@@ -143,7 +144,7 @@ function renderTimeline(){
   computeRange();
   rangeLabel.textContent='Range: '+(minDate?minDate.toLocaleDateString():'—')+' — '+(maxDate?maxDate.toLocaleDateString():'—');
   eventsLayer.innerHTML='';eventsList.innerHTML='';
-  const sorted=events.slice().sort((a,b)=>parseDate(a.start)-parseDate(b.start));
+  const sorted=window.events.slice().sort((a,b)=>parseDate(a.start)-parseDate(b.start));
   sorted.forEach(ev=>{
     const left=dateToPct(ev.start);const right=dateToPct(ev.end||ev.start);const widthPct=Math.max(1,right-left);
     const el=document.createElement('div');el.className='event';el.style.left=left+'%';el.style.width=(widthPct>=2?widthPct+'%':'auto');el.style.backgroundColor=ev.color||'#3b82f6';el.innerHTML='<div>'+ev.title+'</div><div style="font-size:11px">'+ev.start+(ev.end&&ev.end!==ev.start?' — '+ev.end:'')+'</div>';
@@ -163,29 +164,28 @@ document.getElementById('addForm').addEventListener('submit',e=>{
   const desc=document.getElementById('desc').value;
   const color=document.getElementById('color').value;
   if(!title||!start){alert('Title & start date required');return;}
-  events.push({id:Date.now().toString(),title,start,end: end?end:start, description:desc,color});
+  window.events.push({id:Date.now().toString(),title,start,end:end?end:start,description:desc,color});
   saveEvents();
   document.getElementById('addForm').reset();
   renderTimeline();
 });
 
-document.getElementById('clearAll').addEventListener('click',()=>{if(confirm('Clear all events?')){events=[];saveEvents();renderTimeline();}});
+document.getElementById('clearAll').addEventListener('click',()=>{if(confirm('Clear all events?')){window.events=[];saveEvents();renderTimeline();}});
 
 document.getElementById('importBtn').addEventListener('click',()=>{
   try{
     const arr=JSON.parse(document.getElementById('importArea').value.trim());
     if(!Array.isArray(arr)) throw new Error('JSON should be array');
-    arr.forEach((o,i)=>{if(!o.start) throw new Error('Event missing start at '+i);o.id=o.id||('imp'+i);o.color=o.color||'#3b82f6';});
-    events=events.concat(arr);saveEvents();renderTimeline();document.getElementById('importArea').value='';alert('Imported '+arr.length+' events.');
+    arr.forEach((o,i)=>{if(!o.start) throw new Error('Event missing start at '+i);o.id=o.id||('imp'+i);o.color=o.color||'#3b82f6';o.end=o.end?o.end:o.start;o.description=o.description||'';});
+    window.events=window.events.concat(arr);saveEvents();renderTimeline();document.getElementById('importArea').value='';alert('Imported '+arr.length+' events.');
   }catch(err){alert('Invalid JSON: '+err.message);}
 });
 
-document.getElementById('exportBtn').addEventListener('click',()=>{navigator.clipboard.writeText(JSON.stringify(events,null,2)).then(()=>alert('Copied JSON to clipboard'))});
+document.getElementById('exportBtn').addEventListener('click',()=>{navigator.clipboard.writeText(JSON.stringify(window.events,null,2)).then(()=>alert('Copied JSON to clipboard'))});
 
 scrub.addEventListener('input',e=>{setMarkerFromPct(Number(e.target.value));});
 
 renderTimeline();scrub.value=0;setMarkerFromPct(0);
-})();
 </script>
 </body>
 </html>
