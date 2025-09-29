@@ -1,0 +1,26 @@
+[
+  {
+    "id":"e1",
+    "title":"Sneak Peak: Sleep Challenge",
+    "start":"2025-09-01",
+    "end":"2025-09-03",
+    "description":"A short challenge with bonus rewards.",
+    "color":"#ff4500"
+  },
+  {
+    "id":"e2",
+    "title":"Full Moon Marathon",
+    "start":"2025-09-10",
+    "end":"2025-09-12",
+    "description":"Night-time sleep bonus event.",
+    "color":"#1e90ff"
+  },
+  {
+    "id":"e3",
+    "title":"Community Raid",
+    "start":"2025-09-20",
+    "end":"2025-09-22",
+    "description":"Group objectives and rewards.",
+    "color":"#32cd32"
+  }
+]
