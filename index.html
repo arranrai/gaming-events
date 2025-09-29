@@ -1,357 +1,191 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Pokemon Sleep — Upcoming Events</title>
-  <meta name="description" content="Timeline slider for upcoming Pokemon Sleep events. Add events, import JSON, and scrub a timeline." />
-  <style>
-    :root{
-      --bg:#f7fbff;
-      --card:#fff;
-      --muted:#6b7280;
-      --accent:#0ea5e9;
-      --track:#e6eef6;
-      --event-bg:#f1f5f9;
-      --shadow: 0 6px 20px rgba(13, 59, 102, 0.08);
-      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-    }
-    html,body{height:100%;margin:0;background:linear-gradient(180deg,var(--bg),#ffffff);color:#0f172a;}
-    .wrap{max-width:1100px;margin:28px auto;padding:20px;}
-    header{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
-    h1{font-size:26px;margin:0}
-    p.lead{margin:0;color:var(--muted);font-size:14px}
-    .grid{display:grid;gap:18px;margin-top:18px;grid-template-columns:2fr 1fr}
-    /* timeline card */
-    .card{background:var(--card);border-radius:14px;padding:14px;box-shadow:var(--shadow);border:1px solid rgba(15,23,42,0.04);}
-    .meta{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--muted);margin-bottom:8px}
-    .timeline-viewport{overflow-x:auto;padding:12px;border-radius:10px;border:1px solid #eef2f7;background:linear-gradient(180deg,#fff,#fbfdff)}
-    .timeline-inner{position:relative;height:120px;min-width:900px}
-    .track{position:absolute;left:0;right:0;top:56px;height:6px;background:var(--track);border-radius:6px}
-    .event{
-      position:absolute;top:18px;transform:translateX(-50%);
-      min-width:84px;
-      background:var(--event-bg);
-      border-radius:10px;padding:8px;border:1px solid rgba(15,23,42,0.04);
-      box-shadow: 0 6px 18px rgba(12, 74, 110, 0.05);
-      font-size:12px;
-    }
-    .event .title{font-weight:600;margin-bottom:4px}
-    .event .date{color:var(--muted);font-size:11px}
-    .marker{
-      position:absolute;top:0;transform:translateX(-50%);text-align:center;pointer-events:none;
-    }
-    .marker .bar{height:52px;width:2px;background:var(--accent);display:block;margin:0 auto;border-radius:2px;}
-    .controls{margin-top:12px;padding:6px 2px}
-    input[type="range"]{width:100%}
-    /* event list */
-    .events-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:12px}
-    .evt-card{background:#fbfdff;border-radius:10px;padding:10px;border:1px solid rgba(15,23,42,0.03)}
-    .evt-card h4{margin:0;font-size:13px}
-    .evt-card p{margin:6px 0 0 0;color:var(--muted);font-size:12px}
-    /* form */
-    form .row{display:flex;gap:8px}
-    input[type="text"], input[type="date"], textarea, select{
-      width:100%;padding:8px;border-radius:8px;border:1px solid #e6eef6;background:#fff;font-size:13px;
-    }
-    textarea{resize:vertical}
-    .btn{cursor:pointer;padding:8px 12px;border-radius:8px;border:0;background:var(--accent);color:white;font-weight:600}
-    .btn.ghost{background:transparent;border:1px solid #e6eef6;color:var(--muted);font-weight:600}
-    .small{font-size:12px}
-    .import-area{width:100%;height:110px;padding:8px;border-radius:8px;border:1px solid #eef2f7;background:#fff;resize:vertical}
-    footer{margin-top:18px;color:var(--muted);font-size:13px}
-    @media (max-width:880px){ .grid{grid-template-columns:1fr} .timeline-inner{min-width:700px} }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pokemon Sleep — Upcoming Events</title>
+<style>
+:root{
+  --bg:#f7fbff; --card:#fff; --muted:#6b7280; --accent:#0ea5e9;
+  --track:#e6eef6; --shadow: 0 6px 20px rgba(13, 59, 102, 0.08);
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+}
+body{margin:0;background:var(--bg);color:#0f172a;}
+.wrap{max-width:1100px;margin:28px auto;padding:20px;}
+h1{margin:0 0 6px 0;font-size:26px}
+p.lead{margin:0;color:var(--muted);font-size:14px;}
+.grid{display:grid;gap:18px;margin-top:18px;grid-template-columns:2fr 1fr;}
+.card{background:var(--card);border-radius:14px;padding:14px;box-shadow:var(--shadow);border:1px solid rgba(15,23,42,0.04);}
+.meta{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--muted);margin-bottom:8px;}
+.timeline-viewport{overflow-x:auto;padding:12px;border-radius:10px;border:1px solid #eef2f7;background:linear-gradient(180deg,#fff,#fbfdff);}
+.timeline-inner{position:relative;height:120px;min-width:900px;}
+.track{position:absolute;left:0;right:0;top:56px;height:6px;background:var(--track);border-radius:6px;}
+.event{position:absolute;top:18px;transform:translateX(-50%);min-width:84px;border-radius:10px;padding:8px;border:1px solid rgba(15,23,42,0.04);box-shadow:0 6px 18px rgba(12,74,110,0.05);font-size:12px;color:#fff;text-align:center;}
+.marker{position:absolute;top:0;transform:translateX(-50%);text-align:center;pointer-events:none;}
+.marker .bar{height:52px;width:2px;background:var(--accent);display:block;margin:0 auto;border-radius:2px;}
+.controls{margin-top:12px;padding:6px 2px;}
+input[type="range"]{width:100%;}
+.events-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:12px;}
+.evt-card{background:#fbfdff;border-radius:10px;padding:10px;border:1px solid rgba(15,23,42,0.03);}
+.evt-card h4{margin:0;font-size:13px;}
+.evt-card p{margin:6px 0 0 0;color:var(--muted);font-size:12px;}
+form .row{display:flex;gap:8px;margin-bottom:8px;}
+input[type="text"], input[type="date"], textarea, select, input[type="color"]{width:100%;padding:8px;border-radius:8px;border:1px solid #e6eef6;background:#fff;font-size:13px;}
+textarea{resize:vertical;}
+.btn{cursor:pointer;padding:8px 12px;border-radius:8px;border:0;background:var(--accent);color:white;font-weight:600;}
+.btn.ghost{background:transparent;border:1px solid #e6eef6;color:var(--muted);}
+.import-area{width:100%;height:110px;padding:8px;border-radius:8px;border:1px solid #eef2f7;background:#fff;resize:vertical;}
+footer{margin-top:18px;color:var(--muted);font-size:13px;}
+@media(max-width:880px){.grid{grid-template-columns:1fr}.timeline-inner{min-width:700px}}
+</style>
 </head>
 <body>
-  <div class="wrap">
-    <header>
-      <div>
-        <h1>Pokemon Sleep — Upcoming Events</h1>
-        <p class="lead">Add events below and scrub the timeline. Paste JSON to bulk import. Hosted with GitHub Pages.</p>
-      </div>
-    </header>
-
-    <div class="grid">
-      <!-- timeline area -->
-      <section class="card">
-        <div class="meta">
-          <div id="rangeLabel">Range: —</div>
-          <div id="focusLabel">Focus: —</div>
-        </div>
-
-        <div class="timeline-viewport" id="viewport">
-          <div class="timeline-inner" id="timelineInner">
-            <div class="track"></div>
-
-            <!-- events are injected here -->
-            <div id="eventsLayer"></div>
-
-            <!-- marker -->
-            <div id="marker" class="marker" style="left:0%">
-              <span class="bar"></span>
-              <div style="margin-top:6px;font-size:12px;color:var(--accent);" id="markerDate">—</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="controls">
-          <input id="scrub" type="range" min="0" max="100" value="0" />
-        </div>
-
-        <div class="events-grid" id="eventsList"></div>
-      </section>
-
-      <!-- controls / form -->
-      <aside class="card">
-        <h3 style="margin:0 0 8px 0">Add Event</h3>
-        <form id="addForm">
-          <div style="margin-bottom:8px">
-            <input id="title" type="text" placeholder="Title (required)" required/>
-          </div>
-          <div class="row" style="margin-bottom:8px">
-            <input id="start" type="date" required />
-            <input id="end" type="date" />
-          </div>
-          <div style="margin-bottom:8px">
-            <textarea id="desc" rows="3" placeholder="Short description (optional)"></textarea>
-          </div>
-          <div style="display:flex;gap:8px;margin-bottom:8px">
-            <button class="btn" type="submit">Add</button>
-            <button id="clearAll" type="button" class="btn ghost">Clear All</button>
-          </div>
-        </form>
-
-        <hr style="margin:12px 0" />
-
-        <h4 style="margin:0 0 8px 0">Import JSON</h4>
-        <textarea id="importArea" class="import-area" placeholder='Paste an array like: [{"title":"Event","start":"2025-10-01","end":"2025-10-02","description":"..."}]'></textarea>
-        <div style="display:flex;gap:8px;margin-top:8px">
-          <button id="importBtn" class="btn">Import</button>
-          <button id="exportBtn" class="btn ghost">Copy JSON</button>
-        </div>
-
-        <div style="margin-top:12px;color:var(--muted);font-size:12px">
-          Tip: Dates should be in <strong>YYYY-MM-DD</strong> format (HTML date input gives this).
-        </div>
-      </aside>
+<div class="wrap">
+<header>
+<h1>Pokemon Sleep — Upcoming Events</h1>
+<p class="lead">Interactive timeline slider. Add events with color and description. JSON import/export supported.</p>
+</header>
+<div class="grid">
+<section class="card">
+<div class="meta">
+  <div id="rangeLabel">Range: —</div>
+  <div id="focusLabel">Focus: —</div>
+</div>
+<div class="timeline-viewport" id="viewport">
+  <div class="timeline-inner" id="timelineInner">
+    <div class="track"></div>
+    <div id="eventsLayer"></div>
+    <div id="marker" class="marker" style="left:0%">
+      <span class="bar"></span>
+      <div style="margin-top:6px;font-size:12px;color:var(--accent);" id="markerDate">—</div>
     </div>
-
-    <footer>
-      Built for GitHub Pages — events stored locally in your browser. To persist server-side, replace storage with an API.
-    </footer>
   </div>
+</div>
+<div class="controls">
+  <input id="scrub" type="range" min="0" max="100" value="0"/>
+</div>
+<div class="events-grid" id="eventsList"></div>
+</section>
+<aside class="card">
+<h3>Add Event</h3>
+<form id="addForm">
+  <input type="text" id="title" placeholder="Title (required)" required/>
+  <div class="row">
+    <input type="date" id="start" required/>
+    <input type="date" id="end"/>
+  </div>
+  <textarea id="desc" rows="3" placeholder="Short description (optional)"></textarea>
+  <label>Event Color:</label>
+  <input type="color" id="color" value="#ff0000"/>
+  <div style="display:flex;gap:8px;margin-top:8px;">
+    <button class="btn" type="submit">Add</button>
+    <button id="clearAll" class="btn ghost" type="button">Clear All</button>
+  </div>
+</form>
+<hr style="margin:12px 0"/>
+<h4>Import JSON</h4>
+<textarea id="importArea" class="import-area" placeholder='Paste JSON array of events'></textarea>
+<div style="display:flex;gap:8px;margin-top:8px;">
+  <button id="importBtn" class="btn">Import</button>
+  <button id="exportBtn" class="btn ghost">Copy JSON</button>
+</div>
+</aside>
+</div>
+<footer>Built for GitHub Pages — events stored locally or via events.json.</footer>
+</div>
 
-  <script>
-    /* ====== Timeline logic ====== */
-    (function(){
-      // DOM
-      const eventsLayer = document.getElementById('eventsLayer');
-      const eventsList = document.getElementById('eventsList');
-      const scrub = document.getElementById('scrub');
-      const marker = document.getElementById('marker');
-      const markerDate = document.getElementById('markerDate');
-      const rangeLabel = document.getElementById('rangeLabel');
-      const focusLabel = document.getElementById('focusLabel');
-      const timelineInner = document.getElementById('timelineInner');
-      const viewport = document.getElementById('viewport');
+<script>
+(async function(){
+const eventsLayer=document.getElementById('eventsLayer');
+const eventsList=document.getElementById('eventsList');
+const scrub=document.getElementById('scrub');
+const marker=document.getElementById('marker');
+const markerDate=document.getElementById('markerDate');
+const rangeLabel=document.getElementById('rangeLabel');
+const focusLabel=document.getElementById('focusLabel');
+const timelineInner=document.getElementById('timelineInner');
+const viewport=document.getElementById('viewport');
 
-      // storage key
-      const STORAGE_KEY = 'pokemon_sleep_events_v1';
+let events=[];
+const STORAGE_KEY='pokemon_sleep_events_v1';
 
-      // sample default events (useful first-run)
-      const DEFAULT_EVENTS = [
-        { id: 'e1', title: 'Sneak Peak: Sleep Challenge', start: '2025-09-01', end: '2025-09-03', description: 'A short challenge with bonus rewards.' },
-        { id: 'e2', title: 'Full Moon Marathon', start: '2025-09-10', end: '2025-09-12', description: 'Night-time sleep bonus event.' },
-        { id: 'e3', title: 'Community Raid', start: '2025-09-20', end: '2025-09-22', description: 'Group objectives and rewards.' }
-      ];
+// Try fetching events.json from repo
+try{
+  const res=await fetch('events.json');
+  if(res.ok){
+    events=await res.json();
+    localStorage.setItem(STORAGE_KEY,JSON.stringify(events));
+  }else{
+    throw new Error('No events.json');
+  }
+}catch(e){
+  const saved=localStorage.getItem(STORAGE_KEY);
+  if(saved) events=JSON.parse(saved);
+  else events=[];
+}
 
-      // state
-      let events = loadEvents();
-      let minDate = null, maxDate = null;
+function saveEvents(){localStorage.setItem(STORAGE_KEY,JSON.stringify(events));}
+function parseDate(d){return d instanceof Date?d:new Date(d+'T00:00:00');}
+function fmtDate(d){return parseDate(d).toLocaleDateString();}
+let minDate,maxDate;
+function computeRange(){
+  if(events.length===0){const t=new Date();minDate=new Date(t);maxDate=new Date(t);return;}
+  const starts=events.map(e=>parseDate(e.start).getTime());
+  const ends=events.map(e=>parseDate(e.end||e.start).getTime());
+  const min=new Date(Math.min(...starts));min.setDate(min.getDate()-4);
+  const max=new Date(Math.max(...ends));max.setDate(max.getDate()+4);
+  minDate=min;maxDate=max;
+}
+function dateToPct(date){const d=parseDate(date).getTime();const total=maxDate.getTime()-minDate.getTime();return total===0?0:((d-minDate.getTime())/total)*100;}
+function setMarkerFromPct(pct){const bounded=Math.max(0,Math.min(100,pct));marker.style.left=bounded+'%';const ms=minDate.getTime()+(bounded/100)*(maxDate.getTime()-minDate.getTime());const dt=new Date(ms);markerDate.textContent=dt.toLocaleDateString();focusLabel.textContent='Focus: '+dt.toLocaleDateString();viewport.scrollTo({left:(bounded/100)*(timelineInner.scrollWidth-viewport.clientWidth),behavior:'smooth'});}
 
-      function loadEvents(){
-        try{
-          const raw = localStorage.getItem(STORAGE_KEY);
-          if(!raw) { localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_EVENTS)); return DEFAULT_EVENTS.slice(); }
-          const parsed = JSON.parse(raw);
-          if(!Array.isArray(parsed)) throw new Error('bad data');
-          return parsed;
-        }catch(e){
-          console.warn('loading events failed, using defaults', e);
-          localStorage.removeItem(STORAGE_KEY);
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_EVENTS));
-          return DEFAULT_EVENTS.slice();
-        }
-      }
-      function saveEvents(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(events)); }
+function renderTimeline(){
+  computeRange();
+  rangeLabel.textContent='Range: '+(minDate?minDate.toLocaleDateString():'—')+' — '+(maxDate?maxDate.toLocaleDateString():'—');
+  eventsLayer.innerHTML='';eventsList.innerHTML='';
+  const sorted=events.slice().sort((a,b)=>parseDate(a.start)-parseDate(b.start));
+  sorted.forEach(ev=>{
+    const left=dateToPct(ev.start);const right=dateToPct(ev.end||ev.start);const widthPct=Math.max(1,right-left);
+    const el=document.createElement('div');el.className='event';el.style.left=left+'%';el.style.width=(widthPct>=2?widthPct+'%':'auto');el.style.backgroundColor=ev.color||'#3b82f6';el.innerHTML='<div>'+ev.title+'</div><div style="font-size:11px">'+ev.start+(ev.end&&ev.end!==ev.start?' — '+ev.end:'')+'</div>';
+    eventsLayer.appendChild(el);
+    const card=document.createElement('div');card.className='evt-card';card.innerHTML='<h4 style="color:'+ (ev.color||'#0ea5e9') +'">'+ev.title+'</h4><p>'+ev.start+(ev.end&&ev.end!==ev.start?' — '+ev.end:'')+'</p><p style="color:#6b7280">'+(ev.description||'No description')+'</p>';
+    card.addEventListener('click',()=>{scrub.value=dateToPct(ev.start);setMarkerFromPct(scrub.value);});
+    eventsList.appendChild(card);
+  });
+  scrub.dispatchEvent(new Event('input'));
+}
 
-      // helpers
-      function parseDate(d){ return (d instanceof Date) ? d : new Date(d + 'T00:00:00'); } // force local midnight
-      function fmtDate(d){ const dt = parseDate(d); return dt.toLocaleDateString(); }
-      function computeRange(){
-        if(events.length === 0){
-          const t = new Date();
-          minDate = new Date(t); maxDate = new Date(t);
-          return;
-        }
-        const starts = events.map(e => parseDate(e.start).getTime());
-        const ends = events.map(e => parseDate(e.end || e.start).getTime());
-        const min = new Date(Math.min(...starts));
-        const max = new Date(Math.max(...ends));
-        min.setDate(min.getDate() - 4);
-        max.setDate(max.getDate() + 4);
-        minDate = min; maxDate = max;
-      }
-      function dateToPct(date){
-        const d = parseDate(date).getTime();
-        const total = maxDate.getTime() - minDate.getTime();
-        if(total === 0) return 0;
-        return ((d - minDate.getTime()) / total) * 100;
-      }
-      function setMarkerFromPct(pct){
-        const bounded = Math.max(0, Math.min(100, pct));
-        marker.style.left = bounded + '%';
-        const ms = minDate.getTime() + (bounded/100) * (maxDate.getTime() - minDate.getTime());
-        const dt = new Date(ms);
-        markerDate.textContent = dt.toLocaleDateString();
-        focusLabel.textContent = 'Focus: ' + dt.toLocaleDateString();
-        // scroll to center marker
-        const inner = timelineInner;
-        const viewportEl = viewport;
-        const targetScroll = (bounded/100) * (inner.scrollWidth - viewportEl.clientWidth);
-        viewportEl.scrollTo({left: targetScroll, behavior: 'smooth'});
-      }
+document.getElementById('addForm').addEventListener('submit',e=>{
+  e.preventDefault();
+  const title=document.getElementById('title').value;
+  const start=document.getElementById('start').value;
+  const end=document.getElementById('end').value;
+  const desc=document.getElementById('desc').value;
+  const color=document.getElementById('color').value;
+  if(!title||!start){alert('Title & start date required');return;}
+  events.push({id:Date.now().toString(),title,start,end,end?end:start,description:desc,color});
+  saveEvents();
+  document.getElementById('addForm').reset();
+  renderTimeline();
+});
 
-      // render
-      function renderTimeline(){
-        computeRange();
-        rangeLabel.textContent = 'Range: ' + (minDate ? minDate.toLocaleDateString() : '—') + ' — ' + (maxDate ? maxDate.toLocaleDateString() : '—');
-        // clear
-        eventsLayer.innerHTML = '';
-        eventsList.innerHTML = '';
-        // sort
-        const sorted = events.slice().sort((a,b)=> parseDate(a.start) - parseDate(b.start));
-        // render events
-        sorted.forEach(ev => {
-          const left = dateToPct(ev.start);
-          const right = dateToPct(ev.end || ev.start);
-          const widthPct = Math.max(1, right - left);
-          const el = document.createElement('div');
-          el.className = 'event';
-          el.style.left = left + '%';
-          el.style.width = (widthPct >= 2 ? widthPct + '%' : 'auto');
-          el.innerHTML = '<div class="title">'+escapeHtml(ev.title)+'</div>' +
-                         '<div class="date">'+sanitizeDateText(ev.start, ev.end)+'</div>';
-          eventsLayer.appendChild(el);
+document.getElementById('clearAll').addEventListener('click',()=>{if(confirm('Clear all events?')){events=[];saveEvents();renderTimeline();}});
 
-          // list item
-          const card = document.createElement('div');
-          card.className = 'evt-card';
-          card.innerHTML = '<h4>'+escapeHtml(ev.title)+'</h4><p>'+sanitizeDateText(ev.start, ev.end)+' — '+(ev.description?escapeHtml(ev.description):'<span style="color:var(--muted)">No description</span>')+'</p>';
-          eventsList.appendChild(card);
+document.getElementById('importBtn').addEventListener('click',()=>{
+  try{
+    const arr=JSON.parse(document.getElementById('importArea').value.trim());
+    if(!Array.isArray(arr)) throw new Error('JSON should be array');
+    arr.forEach((o,i)=>{if(!o.start) throw new Error('Event missing start at '+i);o.id=o.id||('imp'+i);o.color=o.color||'#3b82f6';});
+    events=events.concat(arr);saveEvents();renderTimeline();document.getElementById('importArea').value='';alert('Imported '+arr.length+' events.');
+  }catch(err){alert('Invalid JSON: '+err.message);}
+});
 
-          // click on list card scrolls/centers the event
-          card.addEventListener('click', ()=> {
-            // compute percentage to center
-            const pct = dateToPct(ev.start);
-            scrub.value = Math.max(0,Math.min(100, pct));
-            setMarkerFromPct(pct);
-          });
-        });
+document.getElementById('exportBtn').addEventListener('click',()=>{navigator.clipboard.writeText(JSON.stringify(events,null,2)).then(()=>alert('Copied JSON to clipboard'))});
 
-        // reset marker at start
-        scrub.dispatchEvent(new Event('input'));
-      }
+scrub.addEventListener('input',e=>{setMarkerFromPct(Number(e.target.value));});
 
-      // small utilities
-      function sanitizeDateText(s,e){
-        if(!e || e === s) return fmtDate(s);
-        return fmtDate(s) + ' — ' + fmtDate(e);
-      }
-      function escapeHtml(t){ return String(t).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
-      function sanitizeDateTextRaw(s){ return s ? s : ''; }
-
-      // form handling
-      document.getElementById('addForm').addEventListener('submit', (ev)=>{
-        ev.preventDefault();
-        const title = document.getElementById('title').value.trim();
-        const start = document.getElementById('start').value;
-        const end = document.getElementById('end').value;
-        const desc = document.getElementById('desc').value.trim();
-        if(!title || !start){ alert('Please enter a title and start date.'); return; }
-        const id = 'id' + Math.random().toString(36).slice(2,9);
-        events.push({id,title,start,end,end?end:start,description:desc});
-        saveEvents();
-        // clear form
-        document.getElementById('title').value='';document.getElementById('start').value='';document.getElementById('end').value='';document.getElementById('desc').value='';
-        renderTimeline();
-      });
-
-      // clear all
-      document.getElementById('clearAll').addEventListener('click', ()=>{
-        if(!confirm('Clear all events (this removes local data)?')) return;
-        events = [];
-        saveEvents();
-        renderTimeline();
-      });
-
-      // import
-      document.getElementById('importBtn').addEventListener('click', ()=>{
-        const raw = document.getElementById('importArea').value.trim();
-        if(!raw){ alert('Paste a JSON array first.'); return; }
-        try{
-          const arr = JSON.parse(raw);
-          if(!Array.isArray(arr)){ alert('JSON should be an array of event objects.'); return; }
-          const cleaned = arr.map((o, i) => {
-            if(!o.start && !o.date) throw new Error('Event missing start/date at index ' + i);
-            return {
-              id: o.id || ('imp'+i+Math.random().toString(36).slice(2,6)),
-              title: o.title || 'Untitled',
-              start: o.start || o.date,
-              end: o.end || o.end || o.start || o.date,
-              description: o.description || ''
-            };
-          });
-          events = events.concat(cleaned);
-          saveEvents();
-          document.getElementById('importArea').value = '';
-          renderTimeline();
-          alert('Imported ' + cleaned.length + ' events.');
-        }catch(err){ alert('Invalid JSON: ' + err.message); }
-      });
-
-      // export / copy
-      document.getElementById('exportBtn').addEventListener('click', async ()=>{
-        const txt = JSON.stringify(events, null, 2);
-        try{
-          await navigator.clipboard.writeText(txt);
-          alert('Events copied to clipboard as JSON.');
-        }catch(e){
-          // fallback
-          const ta = document.createElement('textarea'); ta.value = txt; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove();
-          alert('Copied to clipboard.');
-        }
-      });
-
-      // scrub handling
-      scrub.addEventListener('input', (e)=>{
-        const v = Number(e.target.value);
-        // compute current date
-        if(!minDate || !maxDate) computeRange();
-        setMarkerFromPct(v);
-      });
-
-      // initial render
-      renderTimeline();
-
-      // helper to set initial marker to leftmost
-      scrub.value = 0;
-      setMarkerFromPct(0);
-
-      // small helper functions used above
-      function sanitizeDateText(start, end){ return sanitizeDateTextRaw(start) + (end && end !== start ? ' — ' + sanitizeDateTextRaw(end) : ''); }
-    })();
-  </script>
+renderTimeline();scrub.value=0;setMarkerFromPct(0);
+})();
+</script>
 </body>
 </html>
