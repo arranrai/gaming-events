@@ -98,7 +98,7 @@ footer{margin-top:18px;color:var(--muted);font-size:13px;}
 // ✅ Global events array
 window.events = [];
 
-(async function(){
+// Functions
 const eventsLayer=document.getElementById('eventsLayer');
 const eventsList=document.getElementById('eventsList');
 const scrub=document.getElementById('scrub');
@@ -110,21 +110,6 @@ const timelineInner=document.getElementById('timelineInner');
 const viewport=document.getElementById('viewport');
 
 const STORAGE_KEY='pokemon_sleep_events_v1';
-
-// Load events from events.json first
-try{
-  const res=await fetch('events.json');
-  if(res.ok){
-    const arr=await res.json();
-    window.events = arr.map(e=>({id:e.id,title:e.title,start:e.start,end:e.end?e.end:e.start,description:e.description||'',color:e.color||'#3b82f6'}));
-    localStorage.setItem(STORAGE_KEY,JSON.stringify(window.events));
-  }else{
-    throw new Error('No events.json');
-  }
-}catch(e){
-  const saved=localStorage.getItem(STORAGE_KEY);
-  if(saved) window.events=JSON.parse(saved);
-})();
 
 function saveEvents(){localStorage.setItem(STORAGE_KEY,JSON.stringify(window.events));}
 function parseDate(d){return d instanceof Date?d:new Date(d+'T00:00:00');}
@@ -151,11 +136,28 @@ function setMarkerFromPct(pct){
   viewport.scrollTo({left:(bounded/100)*(timelineInner.scrollWidth-viewport.clientWidth),behavior:'smooth'});
 }
 
+// Load events from events.json or localStorage
+(async function(){
+  try{
+    const res = await fetch('events.json');
+    if(res.ok){
+      const arr = await res.json();
+      window.events = arr.map(e=>({id:e.id,title:e.title,start:e.start,end:e.end?e.end:e.start,description:e.description||'',color:e.color||'#3b82f6'}));
+      saveEvents();
+    } else {throw new Error('No events.json');}
+  } catch(e){
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if(saved) window.events = JSON.parse(saved);
+  }
+  renderTimeline();
+})();
+
+// Render timeline
 function renderTimeline(){
   computeRange();
   rangeLabel.textContent='Range: '+(minDate?minDate.toLocaleDateString():'—')+' — '+(maxDate?maxDate.toLocaleDateString():'—');
   eventsLayer.innerHTML='';eventsList.innerHTML='';
-  const sorted=window.events.slice().sort((a,b)=>parseDate(a.start)-parseDate(b.start));
+  const sorted = window.events.slice().sort((a,b)=>parseDate(a.start)-parseDate(b.start));
   sorted.forEach(ev=>{
     const left=dateToPct(ev.start);
     const right=dateToPct(ev.end||ev.start);
@@ -222,10 +224,6 @@ document.getElementById('exportBtn').addEventListener('click',()=>{
 
 // Scrubber
 scrub.addEventListener('input',e=>{setMarkerFromPct(Number(e.target.value));});
-
-// Initial render
-renderTimeline();
-scrub.value=0;setMarkerFromPct(0);
 
 </script>
 </body>
