@@ -95,7 +95,9 @@ footer{margin-top:18px;color:var(--muted);font-size:13px;}
 </div>
 
 <script>
-window.events = []; // Global for debugging
+// ✅ Global events array
+window.events = [];
+
 (async function(){
 const eventsLayer=document.getElementById('eventsLayer');
 const eventsList=document.getElementById('eventsList');
@@ -120,14 +122,14 @@ try{
     throw new Error('No events.json');
   }
 }catch(e){
-  // fallback to localStorage
   const saved=localStorage.getItem(STORAGE_KEY);
-  if(saved) window.events = JSON.parse(saved);
+  if(saved) window.events=JSON.parse(saved);
 })();
 
 function saveEvents(){localStorage.setItem(STORAGE_KEY,JSON.stringify(window.events));}
 function parseDate(d){return d instanceof Date?d:new Date(d+'T00:00:00');}
 function fmtDate(d){return parseDate(d).toLocaleDateString();}
+
 let minDate,maxDate;
 function computeRange(){
   if(window.events.length===0){const t=new Date();minDate=new Date(t);maxDate=new Date(t);return;}
@@ -137,8 +139,17 @@ function computeRange(){
   const max=new Date(Math.max(...ends));max.setDate(max.getDate()+4);
   minDate=min;maxDate=max;
 }
+
 function dateToPct(date){const d=parseDate(date).getTime();const total=maxDate.getTime()-minDate.getTime();return total===0?0:((d-minDate.getTime())/total)*100;}
-function setMarkerFromPct(pct){const bounded=Math.max(0,Math.min(100,pct));marker.style.left=bounded+'%';const ms=minDate.getTime()+(bounded/100)*(maxDate.getTime()-minDate.getTime());const dt=new Date(ms);markerDate.textContent=dt.toLocaleDateString();focusLabel.textContent='Focus: '+dt.toLocaleDateString();viewport.scrollTo({left:(bounded/100)*(timelineInner.scrollWidth-viewport.clientWidth),behavior:'smooth'});}
+function setMarkerFromPct(pct){
+  const bounded=Math.max(0,Math.min(100,pct));
+  marker.style.left=bounded+'%';
+  const ms=minDate.getTime()+(bounded/100)*(maxDate.getTime()-minDate.getTime());
+  const dt=new Date(ms);
+  markerDate.textContent=dt.toLocaleDateString();
+  focusLabel.textContent='Focus: '+dt.toLocaleDateString();
+  viewport.scrollTo({left:(bounded/100)*(timelineInner.scrollWidth-viewport.clientWidth),behavior:'smooth'});
+}
 
 function renderTimeline(){
   computeRange();
@@ -146,16 +157,27 @@ function renderTimeline(){
   eventsLayer.innerHTML='';eventsList.innerHTML='';
   const sorted=window.events.slice().sort((a,b)=>parseDate(a.start)-parseDate(b.start));
   sorted.forEach(ev=>{
-    const left=dateToPct(ev.start);const right=dateToPct(ev.end||ev.start);const widthPct=Math.max(1,right-left);
-    const el=document.createElement('div');el.className='event';el.style.left=left+'%';el.style.width=(widthPct>=2?widthPct+'%':'auto');el.style.backgroundColor=ev.color||'#3b82f6';el.innerHTML='<div>'+ev.title+'</div><div style="font-size:11px">'+ev.start+(ev.end&&ev.end!==ev.start?' — '+ev.end:'')+'</div>';
+    const left=dateToPct(ev.start);
+    const right=dateToPct(ev.end||ev.start);
+    const widthPct=Math.max(1,right-left);
+    const el=document.createElement('div');
+    el.className='event';
+    el.style.left=left+'%';
+    el.style.width=widthPct+'%';
+    el.style.backgroundColor=ev.color||'#3b82f6';
+    el.innerHTML='<div>'+ev.title+'</div><div style="font-size:11px">'+ev.start+(ev.end&&ev.end!==ev.start?' — '+ev.end:'')+'</div>';
     eventsLayer.appendChild(el);
-    const card=document.createElement('div');card.className='evt-card';card.innerHTML='<h4 style="color:'+ (ev.color||'#0ea5e9') +'">'+ev.title+'</h4><p>'+ev.start+(ev.end&&ev.end!==ev.start?' — '+ev.end:'')+'</p><p style="color:#6b7280">'+(ev.description||'No description')+'</p>';
+
+    const card=document.createElement('div');
+    card.className='evt-card';
+    card.innerHTML='<h4 style="color:'+ (ev.color||'#0ea5e9') +'">'+ev.title+'</h4><p>'+ev.start+(ev.end&&ev.end!==ev.start?' — '+ev.end:'')+'</p><p style="color:#6b7280">'+(ev.description||'No description')+'</p>';
     card.addEventListener('click',()=>{scrub.value=dateToPct(ev.start);setMarkerFromPct(scrub.value);});
     eventsList.appendChild(card);
   });
   scrub.dispatchEvent(new Event('input'));
 }
 
+// Add event form
 document.getElementById('addForm').addEventListener('submit',e=>{
   e.preventDefault();
   const title=document.getElementById('title').value;
@@ -170,22 +192,41 @@ document.getElementById('addForm').addEventListener('submit',e=>{
   renderTimeline();
 });
 
-document.getElementById('clearAll').addEventListener('click',()=>{if(confirm('Clear all events?')){window.events=[];saveEvents();renderTimeline();}});
+// Clear all events
+document.getElementById('clearAll').addEventListener('click',()=>{
+  if(confirm('Clear all events?')){
+    window.events=[];
+    saveEvents();
+    renderTimeline();
+  }
+});
 
+// Import JSON
 document.getElementById('importBtn').addEventListener('click',()=>{
   try{
     const arr=JSON.parse(document.getElementById('importArea').value.trim());
     if(!Array.isArray(arr)) throw new Error('JSON should be array');
     arr.forEach((o,i)=>{if(!o.start) throw new Error('Event missing start at '+i);o.id=o.id||('imp'+i);o.color=o.color||'#3b82f6';o.end=o.end?o.end:o.start;o.description=o.description||'';});
-    window.events=window.events.concat(arr);saveEvents();renderTimeline();document.getElementById('importArea').value='';alert('Imported '+arr.length+' events.');
+    window.events=window.events.concat(arr);
+    saveEvents();
+    renderTimeline();
+    document.getElementById('importArea').value='';
+    alert('Imported '+arr.length+' events.');
   }catch(err){alert('Invalid JSON: '+err.message);}
 });
 
-document.getElementById('exportBtn').addEventListener('click',()=>{navigator.clipboard.writeText(JSON.stringify(window.events,null,2)).then(()=>alert('Copied JSON to clipboard'))});
+// Export JSON
+document.getElementById('exportBtn').addEventListener('click',()=>{
+  navigator.clipboard.writeText(JSON.stringify(window.events,null,2)).then(()=>alert('Copied JSON to clipboard'));
+});
 
+// Scrubber
 scrub.addEventListener('input',e=>{setMarkerFromPct(Number(e.target.value));});
 
-renderTimeline();scrub.value=0;setMarkerFromPct(0);
+// Initial render
+renderTimeline();
+scrub.value=0;setMarkerFromPct(0);
+
 </script>
 </body>
 </html>
