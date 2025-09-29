@@ -163,7 +163,7 @@ document.getElementById('addForm').addEventListener('submit',e=>{
   const desc=document.getElementById('desc').value;
   const color=document.getElementById('color').value;
   if(!title||!start){alert('Title & start date required');return;}
-  events.push({id:Date.now().toString(),title,start,end,end?end:start,description:desc,color});
+  events.push({id:Date.now().toString(),title,start,end: end?end:start, description:desc,color});
   saveEvents();
   document.getElementById('addForm').reset();
   renderTimeline();
